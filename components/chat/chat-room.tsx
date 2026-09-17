@@ -5582,26 +5582,10 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
                                         {...(activeOfflineTarget?.turnId === turn.id && activeOfflineTarget.role === "assistant" ? { "data-active": "" } : {})}
                                     >
                                         {activeOfflineTarget?.turnId === turn.id && activeOfflineTarget.role === "assistant" && renderOfflineContextMenu(turn, "assistant")}
-                                        <div
-                                            onClick={(e) => {
-                                                const target = (e.target as HTMLElement).closest("[data-branch-text], .offline-branch-option");
-                                                if (target) {
-                                                    e.stopPropagation();
-                                                    const text = target.getAttribute("data-branch-text") || (target as HTMLElement).innerText.replace(/^\d+[\.、]\s*/, "").trim();
-                                                    if (text && offlineTextInputRef.current) {
-                                                        offlineTextInputRef.current.setText(text);
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <OfflineAssistantTextBlock
-                                                text={offlineDisplay.assistantContent.replace(/<branch>([\s\S]*?)<\/branch>/gi, (_match, p1) => {
-                                                    const cleanText = p1.trim();
-                                                    return `<div class="offline-branch-option" data-branch-text="${cleanText.replace(/"/g, '&quot;')}" style="margin:6px 0;padding:8px 12px;background:rgba(255,255,255,0.8);border:1px solid rgba(0,0,0,0.08);border-radius:8px;cursor:pointer;line-height:1.5;box-shadow:0 1px 2px rgba(0,0,0,0.03);">${cleanText}</div>`;
-                                                })}
-                                                defaultExpanded={session.collapseBilingualTranslation !== false ? false : true}
-                                            />
-                                        </div>
+                                        <OfflineAssistantTextBlock
+                                            text={offlineDisplay.assistantContent}
+                                            defaultExpanded={session.collapseBilingualTranslation !== false ? false : true}
+                                        />
                                     </div>
                                     {turn.summary.trim() && (
                                         <details className="chat-offline-summary-fold">

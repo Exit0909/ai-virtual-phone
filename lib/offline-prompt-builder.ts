@@ -57,14 +57,12 @@ export function buildOfflinePromptHistory(
             ...(session.isGroup ? { senderName: session.groupName || "群聊线下" } : {}),
         });
     }
-    const offlineBranchInstruction = "\n\n【线下剧情分支规范】仅在线下剧情中生效：请在正文与摘要输出后，附带 6 个承接当前情境的后续剧情分支选项，采用 details 折叠，选项纯文本严格用 <branch> 标签包裹，格式如下：\n<details>\n<summary>剧情走向（6 条）</summary>\n- <branch>走向描述 1</branch>\n- <branch>走向描述 2</branch>\n- <branch>走向描述 3</branch>\n- <branch>走向描述 4</branch>\n- <branch>走向描述 5</branch>\n- <branch>走向描述 6</branch>\n</details>";
-
     if (pendingUserContent.trim()) {
         history.push({
             id: `offline_pending_${Date.now()}`,
             sessionId: session.id,
             role: "user",
-            content: pendingUserContent.trim() + offlineBranchInstruction,
+            content: pendingUserContent.trim(),
             status: "sent",
             createdAt: new Date().toISOString(),
         });
