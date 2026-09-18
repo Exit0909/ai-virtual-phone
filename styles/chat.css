@@ -7226,3 +7226,18 @@
   background: currentColor;
   animation: chat-stream-cursor-blink 1s steps(2, start) infinite;
 }
+
+/* 聊天大图硬件加速与渲染优化：
+   1. transform: translateZ(0) 提升为独立 GPU 合成层，滚动与输入时不触发主线程重排；
+   2. content-visibility: auto 与 contain: paint 避免超大视口外图片参与渲染管线；
+   3. will-change: transform 锁住合成图层，防止掉帧。 */
+.chat-photo-card,
+.chat-photo-card-image,
+.chat-media-file-image img {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  contain: paint;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}

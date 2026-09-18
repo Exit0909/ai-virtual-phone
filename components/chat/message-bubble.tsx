@@ -1376,7 +1376,15 @@ function ImageBubble({
                     <img
                         src={resolvedUrl}
                         alt={label}
+                        loading="lazy"
+                        decoding="async"
                         className="chat-photo-card-image block max-w-[240px] max-h-[320px] w-auto h-auto"
+                        style={{
+                            contain: "paint",
+                            transform: "translateZ(0)",
+                            WebkitBackfaceVisibility: "hidden",
+                            backfaceVisibility: "hidden",
+                        }}
                     />
                 </div>
                 {previewAndDialog}
@@ -1861,7 +1869,20 @@ export function MediaImageWithPreview({
             <div className="chat-media-file-wrap">
                 <div className="chat-media-file-card chat-media-file-image" onClick={(e) => { e.stopPropagation(); setPreview(true); }}>
                     {title && <div className="chat-media-file-title">{title}</div>}
-                    <img src={url} alt={title} style={{ cursor: "pointer" }} onError={onError} />
+                    <img
+                        src={url}
+                        alt={title}
+                        loading="lazy"
+                        decoding="async"
+                        style={{
+                            cursor: "pointer",
+                            contain: "paint",
+                            transform: "translateZ(0)",
+                            WebkitBackfaceVisibility: "hidden",
+                            backfaceVisibility: "hidden",
+                        }}
+                        onError={onError}
+                    />
                 </div>
             </div>
             {preview && (
