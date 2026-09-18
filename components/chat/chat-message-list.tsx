@@ -312,6 +312,7 @@ export function ChatMessageList({ onCloseApp, activeSession, onSelectSession, on
                                             onSelectSession(s);
                                         }}
                                         isPinned={!!s.isPinned}
+                                        isActive={activeSession?.id === s.id}
                                     />
                                 </div>
                             ));
@@ -754,7 +755,7 @@ function ContactPicker({ onClose, onSelect }: { onClose: () => void; onSelect: (
     );
 }
 
-function SessionItem({ session, onSelect, isPinned }: { session: ChatSession, onSelect: () => void, isPinned?: boolean }) {
+function SessionItem({ session, onSelect, isPinned, isActive }: { session: ChatSession, onSelect: () => void, isPinned?: boolean, isActive?: boolean }) {
     const chars = loadCharacters();
     const character = chars.find(c => c.id === session.contactId);
     const lastVisibleMessage = getLastVisibleSessionMessage(session.id);
@@ -768,11 +769,11 @@ function SessionItem({ session, onSelect, isPinned }: { session: ChatSession, on
 
     const latestMessageTime = parseTime(displayTime);
     const lastReadTime = session.lastReadAt || 0;
-    const hasUnread = (session.unreadCount > 0) || (
+    const hasUnread = !isActive && ((session.unreadCount > 0) || (
         latestMessageTime > lastReadTime &&
         lastVisibleMessage &&
         lastVisibleMessage.role !== "user"
-    );
+    ));
 
     // Group chat: build grid of participant avatars (2×2)
     const isGroup = session.isGroup;
