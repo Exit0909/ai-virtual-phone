@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { ChevronLeft } from "lucide-react";
-import { loadChatSessions, loadChatContacts, ChatSession, createOrGetSession, createGroupSession, pushChatMessage, addChatContact, loadChatMessages, getLastVisibleSessionMessage, getChatMessagePreview } from "@/lib/chat-storage";
+import { loadChatSessions, loadChatContacts, ChatSession, createOrGetSession, createGroupSession, pushChatMessage, addChatContact, loadChatMessages, getLastVisibleSessionMessage, getChatMessagePreview, markChatSessionAsRead } from "@/lib/chat-storage";
 import { loadCharacters } from "@/lib/character-storage";
 import { Character } from "@/lib/character-types";
 import { resolveUserIdentity } from "@/lib/settings-storage";
@@ -305,7 +305,14 @@ export function ChatMessageList({ onCloseApp, activeSession, onSelectSession, on
                             })
                             .map(s => (
                                 <div key={s.id}>
-                                    <SessionItem session={s} onSelect={() => onSelectSession(s)} isPinned={!!s.isPinned} />
+                                    <SessionItem
+                                        session={s}
+                                        onSelect={() => {
+                                            markChatSessionAsRead(s.id);
+                                            onSelectSession(s);
+                                        }}
+                                        isPinned={!!s.isPinned}
+                                    />
                                 </div>
                             ));
                             if (!showMascot && regularItems.length === 0) {
@@ -759,6 +766,14 @@ function SessionItem({ session, onSelect, isPinned }: { session: ChatSession, on
     const preview = offlineIsNewer ? getChatOfflineTurnPreview(lastOfflineTurn) : onlinePreview;
     const displayTime = pickLaterTime(lastVisibleMessage?.createdAt, lastOfflineTurn?.createdAt) || session.updatedAt;
 
+    const latestMessageTime = parseTime(displayTime);
+    const lastReadTime = session.lastReadAt || 0;
+    const hasUnread = (session.unreadCount > 0) || (
+        latestMessageTime > lastReadTime &&
+        lastVisibleMessage &&
+        lastVisibleMessage.role !== "user"
+    );
+
     // Group chat: build grid of participant avatars (2×2)
     const isGroup = session.isGroup;
     const userIdentity = isGroup ? resolveUserIdentity(undefined, "group_chat") : null;
@@ -804,10 +819,18 @@ function SessionItem({ session, onSelect, isPinned }: { session: ChatSession, on
             )}
             <div className="flex-1 overflow-hidden h-[48px] flex flex-col justify-center gap-1">
                 <div className="flex justify-between items-center">
-                    <span className="ts-16 font-medium text-[var(--c-text-title)] truncate">
-                        {isGroup ? (session.groupName || "群聊") : (session.alias || character?.name || `User_${session.contactId.slice(-4)}`)}
-                    </span>
-                    <span className="ts-12 text-[var(--c-icon)] font-medium">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="ts-16 font-medium text-[var(--c-text-title)] truncate">
+                            {isGroup ? (session.groupName || "群聊") : (session.alias || character?.name || `User_${session.contactId.slice(-4)}`)}
+                        </span>
+                        {hasUnread && (
+                            <span
+                                className="w-2 h-2 rounded-full bg-red-500 shrink-0 inline-block shadow-sm"
+                                title="未读消息"
+                            />
+                        )}
+                    </div>
+                    <span className="ts-12 text-[var(--c-icon)] font-medium shrink-0 ml-2">
                         {formatChatUiTime(displayTime)}
                     </span>
                 </div>
