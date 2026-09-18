@@ -1109,6 +1109,9 @@ export function markChatSessionAsRead(sessionId: string): void {
     sessions[idx].lastReadAt = now;
     sessions[idx].unreadCount = 0;
     saveChatSessions(sessions);
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("chat-messages-updated", { detail: { sessionId } }));
+    }
 }
 
 export function deleteChatSession(sessionId: string) {
