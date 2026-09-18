@@ -769,11 +769,13 @@ function SessionItem({ session, onSelect, isPinned, isActive }: { session: ChatS
 
     const latestMessageTime = parseTime(displayTime);
     const lastReadTime = session.lastReadAt || 0;
-    const hasUnread = !isActive && ((session.unreadCount > 0) || (
+    // 只有当最新消息产生在上次离开/已读时间之后，且最后一条不是自己发的，才视为未读
+    const hasUnread = !isActive && Boolean(
+        latestMessageTime > 0 &&
         latestMessageTime > lastReadTime &&
         lastVisibleMessage &&
         lastVisibleMessage.role !== "user"
-    ));
+    );
 
     // Group chat: build grid of participant avatars (2×2)
     const isGroup = session.isGroup;
