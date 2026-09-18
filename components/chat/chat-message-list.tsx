@@ -755,11 +755,11 @@ function ContactPicker({ onClose, onSelect }: { onClose: () => void; onSelect: (
     );
 }
 
-function SessionItem({ session, onSelect, isPinned, isActive }: { session: ChatSession, onSelect: () => void, isPinned?: boolean, isActive?: boolean }) {
-    const chars = loadCharacters();
-    const character = chars.find(c => c.id === session.contactId);
-    const lastVisibleMessage = getLastVisibleSessionMessage(session.id);
-    const lastOfflineTurn = getLastChatOfflineTurn(session.id);
+const SessionItem = React.memo(function SessionItem({ session, onSelect, isPinned, isActive }: { session: ChatSession, onSelect: () => void, isPinned?: boolean, isActive?: boolean }) {
+    const chars = React.useMemo(() => loadCharacters(), []);
+    const character = React.useMemo(() => chars.find(c => c.id === session.contactId), [chars, session.contactId]);
+    const lastVisibleMessage = React.useMemo(() => getLastVisibleSessionMessage(session.id), [session.id, session.lastMessageId]);
+    const lastOfflineTurn = React.useMemo(() => getLastChatOfflineTurn(session.id), [session.id]);
     // 线下记录比线上消息新时（含只在线下聊过的会话），列表展示线下摘要
     const offlineIsNewer = Boolean(lastOfflineTurn)
         && parseTime(lastOfflineTurn?.createdAt) > parseTime(lastVisibleMessage?.createdAt);
@@ -845,4 +845,4 @@ function SessionItem({ session, onSelect, isPinned, isActive }: { session: ChatS
             </div>
         </div>
     );
-}
+});
