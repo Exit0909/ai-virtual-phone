@@ -8,7 +8,7 @@ import { ChatRoom } from "./chat-room";
 import { MascotChatRoom } from "./mascot-chat-room";
 import { UserProfilePanel } from "./user-profile-panel";
 import { MessageCircle, Users, Aperture, UserRound } from "lucide-react";
-import { ChatSession, loadChatSessions, pushChatMessage, hydrateChatStorage } from "@/lib/chat-storage";
+import { ChatSession, loadChatSessions, pushChatMessage, hydrateChatStorage, markChatSessionAsRead } from "@/lib/chat-storage";
 import { notifyMascotPageContext } from "@/lib/mascot-events";
 import { loadCharacters } from "@/lib/character-storage";
 import { SessionCustomCSS } from "@/components/ui/session-custom-css";
@@ -303,7 +303,10 @@ export const PhoneChatApp = memo(function PhoneChatApp({ onClose, initialSession
                 <div key={sess.id} style={{ display: activeSession?.id === sess.id ? undefined : 'none' }} className="chat-room-layer absolute inset-0">
                     <ChatRoom
                         session={sess}
-                        onBack={() => setActiveSession(null)}
+                        onBack={() => {
+                            markChatSessionAsRead(sess.id);
+                            setActiveSession(null);
+                        }}
                         onDeleted={() => {
                             // 会话已删除：把缓存的聊天室一并卸载，避免僵尸挂载
                             setVisitedSessions(prev => {
