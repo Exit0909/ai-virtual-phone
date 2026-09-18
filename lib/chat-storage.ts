@@ -1102,13 +1102,20 @@ export function createGroupSession(groupName: string, participantIds: string[], 
 }
 
 export function markChatSessionAsRead(sessionId: string): void {
+    const now = Date.now() + 5000; // 缓冲 5 秒，覆盖生成中的细微时钟漂移
+    const sessIdx = _sessionsCache.findIndex(s => s.id === sessionId);
+    if (sessIdx !== -1) {
+        _sessionsCache[sessIdx].lastReadAt = now;
+        _sessionsCache[sessIdx].unreadCount = 0;
+        dbPutSessions([_sessionsCache[sessIdx]]);
+    }
     const sessions = loadChatSessions();
     const idx = sessions.findIndex(s => s.id === sessionId);
-    if (idx === -1) return;
-    const now = Date.now();
-    sessions[idx].lastReadAt = now;
-    sessions[idx].unreadCount = 0;
-    saveChatSessions(sessions);
+    if (idx !== -1) {
+        sessions[idx].lastReadAt = now;
+        sessions[idx].unreadCount = 0;
+        saveChatSessions(sessions);
+    }
     if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("chat-messages-updated", { detail: { sessionId } }));
     }
