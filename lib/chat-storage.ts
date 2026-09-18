@@ -39,6 +39,7 @@ export type ChatSession = {
     lastMessageId?: string;
     lastMessagePreview?: string;
     unreadCount: number;
+    lastReadAt?: number; // Timestamp (ms) when session was last opened/read
     updatedAt: string; // ISO date
     isPinned: boolean;
     backgroundImage?: string; // Add support for custom background
@@ -1098,6 +1099,16 @@ export function createGroupSession(groupName: string, participantIds: string[], 
     };
     saveChatSessions([newSession, ...sessions]);
     return newSession;
+}
+
+export function markChatSessionAsRead(sessionId: string): void {
+    const sessions = loadChatSessions();
+    const idx = sessions.findIndex(s => s.id === sessionId);
+    if (idx === -1) return;
+    const now = Date.now();
+    sessions[idx].lastReadAt = now;
+    sessions[idx].unreadCount = 0;
+    saveChatSessions(sessions);
 }
 
 export function deleteChatSession(sessionId: string) {
