@@ -282,10 +282,53 @@ function HtmlFullscreenModal({ html, onClose, onActionSelect }: { html: string; 
 }
 
 function buildChatHtmlDocument(html: string, inline = false): string {
-    const action = `document.addEventListener("click",function(e){
-                var t=e.target.closest("[data-action]");
-                if(t){e.preventDefault();window.parent.postMessage({type:"_chat_action",text:t.getAttribute("data-action")},"*")}
-            },true);`;
+    const action = `(function(){
+                var timer = null;
+                var startX = 0;
+                var startY = 0;
+                var longPressed = false;
+                var activeTarget = null;
+                function clearLP() {
+                    if (timer) { clearTimeout(timer); timer = null; }
+                    activeTarget = null;
+                }
+                document.addEventListener("pointerdown", function(e) {
+                    var t = e.target.closest("[data-action]");
+                    if (!t) return;
+                    clearLP();
+                    longPressed = false;
+                    activeTarget = t;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    timer = setTimeout(function() {
+                        longPressed = true;
+                        if (navigator.vibrate) { try { navigator.vibrate(40); } catch(err){} }
+                        var actionText = t.getAttribute("data-action") || t.innerText || t.textContent || "";
+                        window.parent.postMessage({ type: "_chat_action_copy", text: actionText.trim() }, "*");
+                    }, 500);
+                }, true);
+                document.addEventListener("pointermove", function(e) {
+                    if (!activeTarget) return;
+                    if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
+                        clearLP();
+                    }
+                }, true);
+                document.addEventListener("pointerup", clearLP, true);
+                document.addEventListener("pointercancel", clearLP, true);
+                document.addEventListener("click", function(e) {
+                    var t = e.target.closest("[data-action]");
+                    if (t) {
+                        if (longPressed) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            longPressed = false;
+                            return;
+                        }
+                        e.preventDefault();
+                        window.parent.postMessage({ type: "_chat_action", text: t.getAttribute("data-action") }, "*");
+                    }
+                }, true);
+            })();`;
     // 只量 body，绝不掺 documentElement.scrollHeight：后者至少等于 iframe 视口高，
     // 而视口高就是父层刚设下去的 iframe 高度——量到的是自己，于是高度只涨不缩，
     // 内容收起后卡片底下会留一大片空白。body 的高度是内容撑出来的，可涨可缩。
@@ -340,6 +383,9 @@ function ChatHtmlInlineFrame({
             }
             if (e.data.type === "_chat_action" && typeof e.data.text === "string") {
                 onActionSelect?.(e.data.text);
+            }
+            if (e.data.type === "_chat_action_copy" && typeof e.data.text === "string") {
+                window.dispatchEvent(new CustomEvent("chat:action-copy", { detail: { text: e.data.text } }));
             }
         };
         window.addEventListener("message", handler);
@@ -491,22 +537,68 @@ function MarkdownTextContent({
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Action delegate for data-action clicks in inline HTML
+    // Action delegate for data-action clicks & long-press copy in inline HTML
     useEffect(() => {
-        if (!onActionSelect) return;
         const el = containerRef.current;
         if (!el) return;
-        const handler = (e: MouseEvent) => {
+        let timer: any = null;
+        let startX = 0;
+        let startY = 0;
+        let longPressed = false;
+        let activeTarget: HTMLElement | null = null;
+        const clearLP = () => {
+            if (timer) { clearTimeout(timer); timer = null; }
+            activeTarget = null;
+        };
+        const onPointerDown = (e: PointerEvent) => {
+            const t = (e.target as HTMLElement).closest("[data-action]") as HTMLElement | null;
+            if (!t) return;
+            clearLP();
+            longPressed = false;
+            activeTarget = t;
+            startX = e.clientX;
+            startY = e.clientY;
+            timer = setTimeout(() => {
+                longPressed = true;
+                if (navigator.vibrate) { try { navigator.vibrate(40); } catch(err){} }
+                const actionText = t.getAttribute("data-action") || t.innerText || t.textContent || "";
+                window.dispatchEvent(new CustomEvent("chat:action-copy", { detail: { text: actionText.trim() } }));
+            }, 500);
+        };
+        const onPointerMove = (e: PointerEvent) => {
+            if (!activeTarget) return;
+            if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) {
+                clearLP();
+            }
+        };
+        const onClick = (e: MouseEvent) => {
             const target = (e.target as HTMLElement).closest("[data-action]");
             if (target) {
+                if (longPressed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    longPressed = false;
+                    return;
+                }
                 e.preventDefault();
                 e.stopPropagation();
                 const action = target.getAttribute("data-action");
-                if (action) onActionSelect(action);
+                if (action && onActionSelect) onActionSelect(action);
             }
         };
-        el.addEventListener("click", handler, true);
-        return () => el.removeEventListener("click", handler, true);
+        el.addEventListener("pointerdown", onPointerDown, true);
+        el.addEventListener("pointermove", onPointerMove, true);
+        el.addEventListener("pointerup", clearLP, true);
+        el.addEventListener("pointercancel", clearLP, true);
+        el.addEventListener("click", onClick, true);
+        return () => {
+            clearLP();
+            el.removeEventListener("pointerdown", onPointerDown, true);
+            el.removeEventListener("pointermove", onPointerMove, true);
+            el.removeEventListener("pointerup", clearLP, true);
+            el.removeEventListener("pointercancel", clearLP, true);
+            el.removeEventListener("click", onClick, true);
+        };
     }, [onActionSelect]);
 
     // Strip [音乐:xxx] and tool tags, collapse newlines

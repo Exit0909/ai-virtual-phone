@@ -5358,6 +5358,23 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
         setMessages(nextMessages);
     }, [session.id, stopLoadMoreAnchorTracking]);
 
+    useEffect(() => {
+        const handleActionCopy = (e: Event) => {
+            const customEvt = e as CustomEvent<{ text: string }>;
+            const text = customEvt.detail?.text;
+            if (!text) return;
+            copyTextToClipboard(text);
+            if (offlineMode) {
+                offlineTextInputRef.current?.setText(text);
+            } else {
+                chatTextInputRef.current?.appendText(text, { focus: true });
+            }
+            showChatToast("已将剧情走向复制到输入框");
+        };
+        window.addEventListener("chat:action-copy", handleActionCopy);
+        return () => window.removeEventListener("chat:action-copy", handleActionCopy);
+    }, [offlineMode, showChatToast]);
+
     // Shared handler: reload messages + re-trigger scroll-to-bottom after call ends
     const returnFromCall = (hide: () => void) => {
         hide();
