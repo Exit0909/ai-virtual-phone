@@ -512,22 +512,25 @@ export default function MusicPlayer() {
                 <div className="mp-link-fm-tip">
                     {togetherSession?.active ? `正在与 ${togetherSession.characterName} 同步听歌` : "从聊天里邀请角色后，右侧头像会亮起"}
                 </div>
-                <div className="mp-link-fm-pill">
-                    <span>♥</span> 歌词同步中
+                <div className="mp-link-fm-actions-row">
+                    <div className="mp-link-fm-pill">
+                        <span>♥</span> 歌词同步中
+                    </div>
+                    {togetherSession?.active && (
+                        <button
+                            type="button"
+                            className="mp-link-fm-quit-pill"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const charName = togetherSession.characterName;
+                                stopTogetherSession();
+                                showMusicToast(`已结束与 ${charName} 的一起听`, 2200);
+                            }}
+                        >
+                            结束一起听
+                        </button>
+                    )}
                 </div>
-                {togetherSession?.active && (
-                    <button
-                        type="button"
-                        className="mp-link-fm-quit-btn"
-                        onClick={() => {
-                            const charName = togetherSession.characterName;
-                            stopTogetherSession();
-                            showMusicToast(`已结束与 ${charName} 的一起听`, 2200);
-                        }}
-                    >
-                        结束一起听
-                    </button>
-                )}
             </div>
 
             {/* Body — cover / vinyl / glow lyrics */}

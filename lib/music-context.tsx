@@ -195,12 +195,21 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         cleanupBlobUrl();
         audio.pause();
 
-        // Netease tracks: fetch play URL from API
+        // Netease tracks: fetch play URL & lyrics from API
         if (track.id.startsWith("netease_")) {
             const nid = parseInt(track.id.replace("netease_", ""), 10);
-            const playUrl = await getNeteasePlayUrl(nid);
+            const [playUrl, lyrics, detail] = await Promise.all([
+                getNeteasePlayUrl(nid),
+                (!track.lyrics ? getNeteaseLyrics(nid).catch(() => "") : Promise.resolve(track.lyrics)),
+                (!track.coverUrl ? getNeteaseSongDetail(nid).catch(() => null) : Promise.resolve(null)),
+            ]);
             if (!playUrl) return;
             audio.src = playUrl;
+            track = {
+                ...track,
+                lyrics: lyrics || track.lyrics,
+                coverUrl: detail?.coverUrl || track.coverUrl,
+            };
         } else {
             // Local tracks: load blob from IndexedDB
             const blob = await getAudioBlob(track.id);

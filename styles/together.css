@@ -319,8 +319,15 @@
     margin-top: 8px;
 }
 
-.mp-link-fm-pill {
+.mp-link-fm-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     margin-top: 12px;
+}
+
+.mp-link-fm-pill {
     background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -331,6 +338,24 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+}
+
+.mp-link-fm-quit-pill {
+    background: rgba(239, 68, 68, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+    transition: transform 0.15s, opacity 0.2s;
+}
+
+.mp-link-fm-quit-pill:active {
+    transform: scale(0.95);
 }
 
 .mp-link-fm-quit-btn {
