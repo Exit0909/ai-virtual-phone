@@ -1512,6 +1512,47 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
         return () => window.removeEventListener("chat-session-css-updated", onCSSUpdate);
     }, [session.id]);
 
+    // ── 一起听联动：实时监听切歌事件，角色立刻在聊天室给出对新歌的反应 ──
+    useEffect(() => {
+        const onTogetherTrackSwitched = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (!detail?.track) return;
+            const targetCharId = detail.characterId;
+            // 只有当前聊天的角色是正在一起听的角色时才处理
+            if (targetCharId !== session.contactId) return;
+
+            const t = detail.track;
+            const charN = character?.name || "对方";
+            const userN = userIdentity?.name || "你";
+
+            const switchNotice = `[切歌通知：耳机里切到了新歌《${t.title}》（${t.artist || "未知歌手"}）]`;
+            const sysMsg = pushChatMessage({
+                sessionId: session.id,
+                role: "system",
+                content: switchNotice,
+            });
+            setMessages(prev => [...prev, sysMsg]);
+
+            // 让角色对新切的这首歌即时表达听感或评价
+            const switchPrompt = `[系统事件：用户${userN}刚刚在网易云切到了一首新歌《${t.title}》（歌手：${t.artist || "未知"}），此时你们正戴着同一副耳机一起听。请作为${charN}，立刻顺其自然地对这首刚响起的旋律/歌名表达你的第一反应或听歌评价，可吐槽、可赞叹、可联想回忆，契合你的性格。]`;
+            void runManagedGeneration({
+                history: [
+                    ...loadChatMessages(session.id),
+                    {
+                        id: `together-switch-${Date.now()}`,
+                        sessionId: session.id,
+                        role: "system",
+                        content: switchPrompt,
+                        createdAt: new Date().toISOString(),
+                    }
+                ]
+            });
+        };
+
+        window.addEventListener("together-track-switched", onTogetherTrackSwitched);
+        return () => window.removeEventListener("together-track-switched", onTogetherTrackSwitched);
+    }, [session.id, session.contactId, character?.name, userIdentity?.name]);
+
     // Listen for WeChat bridge: reload from storage (preserves rich formatting)
     useEffect(() => {
         const onWeixinUpdate = (e: Event) => {

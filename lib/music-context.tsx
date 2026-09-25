@@ -6,6 +6,7 @@ import type { MusicTrack } from "./music-storage";
 import { getAudioBlob, markTrackPlayed } from "./music-storage";
 import { findPlayableMatch, getNeteaseLyrics, getNeteasePlayUrl, getNeteasePlayInfo, getNeteaseSongDetail } from "./music-service";
 import { kvGet, kvSet, registerKvMigration } from "./kv-db";
+import { loadTogetherSession, saveTogetherSession } from "./music-together";
 import { registerMusicControlBridge } from "./music-control-bridge";
 
 // ── Types ──
@@ -215,6 +216,26 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         setCurrentTrack(track);
         setCurrentTime(0);
 
+        // 换歌时：如果当前正在与角色「一起听」，同步更新一起听当前曲目，并广播换歌感知事件
+        try {
+            const currentTogether = loadTogetherSession();
+            if (currentTogether?.active) {
+                saveTogetherSession({
+                    ...currentTogether,
+                    songTitle: track.title,
+                    songArtist: track.artist,
+                    songCover: track.coverUrl,
+                });
+                window.dispatchEvent(new CustomEvent("together-track-switched", {
+                    detail: {
+                        track,
+                        characterId: currentTogether.characterId,
+                        characterName: currentTogether.characterName,
+                    }
+                }));
+            }
+        } catch { /* ignore */ }
+
         try {
             await audio.play();
         } catch {
@@ -238,6 +259,26 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         setCurrentTrack(track);
         setCurrentTime(0);
         audio.play().catch(() => {});
+
+        // 换歌时：如果当前正在与角色「一起听」，同步更新一起听当前曲目，并广播换歌感知事件
+        try {
+            const currentTogether = loadTogetherSession();
+            if (currentTogether?.active) {
+                saveTogetherSession({
+                    ...currentTogether,
+                    songTitle: track.title,
+                    songArtist: track.artist,
+                    songCover: track.coverUrl,
+                });
+                window.dispatchEvent(new CustomEvent("together-track-switched", {
+                    detail: {
+                        track,
+                        characterId: currentTogether.characterId,
+                        characterName: currentTogether.characterName,
+                    }
+                }));
+            }
+        } catch { /* ignore */ }
     }, [cleanupBlobUrl]);
 
     const pause = useCallback(() => {
