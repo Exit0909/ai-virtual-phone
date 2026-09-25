@@ -381,12 +381,16 @@ export default function MusicPlayer() {
         if (target.id.startsWith("netease_")) {
             beginMusicLoadingToast(target.id);
             const nid = parseInt(target.id.replace("netease_", ""), 10);
-            const info = await getNeteasePlayInfo(nid);
+            const [info, lyrics] = await Promise.all([
+                getNeteasePlayInfo(nid),
+                getNeteaseLyrics(nid).catch(() => ""),
+            ]);
             if (!info.url) {
                 showMusicToast(info.reason || "加载失败，请稍后重试", 2600);
                 return;
             }
-            player.playUrl(info.url, target);
+            const trackWithLyrics = { ...target, lyrics: lyrics || target.lyrics };
+            player.playUrl(info.url, trackWithLyrics);
             if (info.trial) showMusicToast("VIP 歌曲，当前播放 30 秒试听", 2600);
             return;
         }
@@ -512,24 +516,33 @@ export default function MusicPlayer() {
                 <div className="mp-link-fm-tip">
                     {togetherSession?.active ? `正在与 ${togetherSession.characterName} 同步听歌` : "从聊天里邀请角色后，右侧头像会亮起"}
                 </div>
-                <div className="mp-link-fm-actions-row">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 12 }}>
                     <div className="mp-link-fm-pill">
                         <span>♥</span> 歌词同步中
                     </div>
-                    {togetherSession?.active && (
-                        <button
-                            type="button"
-                            className="mp-link-fm-quit-pill"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const charName = togetherSession.characterName;
-                                stopTogetherSession();
-                                showMusicToast(`已结束与 ${charName} 的一起听`, 2200);
-                            }}
-                        >
-                            结束一起听
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        style={{
+                            background: "#ef4444",
+                            border: "none",
+                            borderRadius: "20px",
+                            padding: "5px 14px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(239, 68, 68, 0.5)",
+                            zIndex: 10,
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const charName = togetherSession?.characterName || "角色";
+                            stopTogetherSession();
+                            showMusicToast(`已结束与 ${charName} 的一起听`, 2200);
+                        }}
+                    >
+                        结束一起听
+                    </button>
                 </div>
             </div>
 
