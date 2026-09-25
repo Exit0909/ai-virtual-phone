@@ -1,0 +1,366 @@
+/* components/music/together.css — 一起听专属样式（还原图一与图二） */
+
+/* ── 弹窗遮罩与抽屉 ── */
+.together-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: tgFadeIn 0.25s ease-out;
+}
+
+@keyframes tgFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.together-modal-sheet {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: 28px 28px 0 0;
+    padding: 16px 20px 32px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    animation: tgSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #1a1a1a;
+}
+
+@keyframes tgSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.together-modal-handle {
+    width: 36px;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+}
+
+.together-modal-header {
+    margin-bottom: 20px;
+}
+
+.together-modal-badge {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #ef4444;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.together-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* ── 歌曲卡片 ── */
+.together-track-card {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 18px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.together-track-cover-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.together-track-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.together-track-cover-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: linear-gradient(135deg, #fb7185, #f43f5e);
+}
+
+.together-track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.together-track-label {
+    font-size: 11px;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.together-track-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-ellipsis: true;
+}
+
+.together-track-artist {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-ellipsis: true;
+}
+
+/* ── 声波微动 ── */
+.together-wave-anim {
+    display: flex;
+    align-items: center;
+    gap: 2.5px;
+    height: 24px;
+    padding: 0 4px;
+}
+
+.tw-bar {
+    width: 3px;
+    height: 100%;
+    background: #f43f5e;
+    border-radius: 2px;
+    animation: twBounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes twBounce {
+    0% { height: 4px; }
+    100% { height: 20px; }
+}
+
+/* ── 状态胶囊 ── */
+.together-status-pill {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.together-status-pill span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #f43f5e;
+    background: #fff1f2;
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+/* ── 迷你进度条 ── */
+.together-mini-progress {
+    margin-bottom: 20px;
+}
+
+.together-mini-bar {
+    height: 4px;
+    background: #f1f5f9;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.together-mini-fill {
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(90deg, #f43f5e, #fb7185);
+    border-radius: 2px;
+}
+
+.together-mini-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.together-mini-center {
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* ── 备注输入 ── */
+.together-note-section {
+    margin-bottom: 24px;
+}
+
+.together-note-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.together-note-input {
+    width: 100%;
+    height: 48px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.together-note-input:focus {
+    border-color: #f43f5e;
+    background: #ffffff;
+}
+
+/* ── 操作按钮 ── */
+.together-modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.together-btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+}
+
+.together-btn:active {
+    transform: scale(0.98);
+}
+
+.together-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.together-btn-submit {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+/* ── 播放器顶部 Link FM 双人头像（图二） ── */
+.mp-link-fm-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.mp-link-fm-status {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-text, #fff);
+    margin-bottom: 12px;
+    letter-spacing: 0.02em;
+}
+
+.mp-link-fm-avatars {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+}
+
+.mp-link-fm-avatar-box {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+    background: #222;
+}
+
+.mp-link-fm-avatar-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mp-link-fm-avatar-inactive {
+    opacity: 0.55;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    border-style: dashed;
+}
+
+.mp-link-fm-tip {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 8px;
+}
+
+.mp-link-fm-pill {
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── 聊天室卡片 ── */
+.chat-together-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 14px;
+    width: 260px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #f1f5f9;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.chat-together-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.chat-together-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: #ef4444;
+}
+
+.chat-together-note {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}

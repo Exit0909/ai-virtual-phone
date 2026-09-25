@@ -11,6 +11,8 @@ import { translateReasoningText } from "@/lib/reasoning-translate";
 import { MessageBubble, MediaDetailModal, prewarmStickerCache, BilingualTextBlock, isStandaloneHtmlPreviewContent, normalizeTextBubbleContent } from "./message-bubble";
 import { GeneratedImageErrorDialog } from "./generated-image-error-dialog";
 import { PhotoInputModal, TextPhotoModal, VoiceRecordModal, RedPacketModal, LocationInputModal, SystemInstructionModal } from "./rich-input-modals";
+import { TogetherInviteModal } from "@/components/music/together-modal";
+import { saveTogetherSession } from "@/lib/music-together";
 import { EmojiPanel, StickerPanel } from "./emoji-panel";
 import { StickerSearchSuggest } from "./sticker-search-suggest";
 import { StateValuesPanel } from "./state-values-panel";
@@ -487,7 +489,7 @@ type PendingMessageJump = {
 };
 
 const TRANSIENT_MESSAGE_PREFIX = "ui-transient-";
-type RichModalKind = "photo" | "text_photo" | "red_packet" | "transfer" | "location" | "transfer_target" | "voice_msg" | "gift" | "system_instruction";
+type RichModalKind = "photo" | "text_photo" | "red_packet" | "transfer" | "location" | "transfer_target" | "voice_msg" | "gift" | "system_instruction" | "together_music";
 type ChatTextInputHandle = {
     appendText: (text: string, options?: { focus?: boolean }) => void;
     clear: () => void;
@@ -729,6 +731,7 @@ const ChatTextInputBar = memo(forwardRef<ChatTextInputHandle, {
         { icon: <Gift size={22} strokeWidth={1.5} color="var(--c-text)" />, label: "礼物", onClick: () => onOpenRichModal("gift") },
         { icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--c-text)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>, label: "位置", onClick: () => onOpenRichModal("location") },
         { icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--c-text)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /><line x1="8" y1="22" x2="16" y2="22" /></svg>, label: "语音条", onClick: () => onOpenRichModal("voice_msg") },
+        { icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>, label: "一起听", onClick: () => onOpenRichModal("together_music") },
         ...customPlusActions.map(action => ({
             icon: action.appIconDataUrl
                 ? <span className="chat-plus-custom-app-icon" style={{ backgroundImage: `url(${action.appIconDataUrl})` }} aria-hidden="true" />
@@ -6471,6 +6474,56 @@ export function ChatRoom({ session, onBack, onDeleted }: ChatRoomProps) {
                         if (sent) setRichModal(null);
                     }}
                     onClose={() => setRichModal(null)}
+                />
+            )}
+            {richModal === "together_music" && (
+                <TogetherInviteModal
+                    characterName={character?.name || "对方"}
+                    track={getMusicControlBridge()?.getState()?.currentTrack || null}
+                    onClose={() => setRichModal(null)}
+                    onSend={({ track, note }) => {
+                        setRichModal(null);
+                        const userN = userIdentity?.name || "你";
+                        const charN = character?.name || "对方";
+                        const bridgeState = getMusicControlBridge()?.getState();
+                        saveTogetherSession({
+                            active: true,
+                            characterId: session.contactId,
+                            characterName: charN,
+                            characterAvatar: character?.avatar,
+                            userAvatar: userIdentity?.avatarUrl,
+                            userName: userN,
+                            songTitle: track.title,
+                            songArtist: track.artist,
+                            songCover: track.coverUrl,
+                            note,
+                            joinedAt: Date.now(),
+                        });
+                        const cardText = `[一起听邀请]\n曲目：${track.title} - ${track.artist || "未知歌手"}${note ? `\n留言：${note}` : ""}\n[双方已连接进入一起听模式]`;
+                        sendRichMessage("together", {
+                            title: "一起听邀请",
+                            label: `${track.title} - ${track.artist || "未知歌手"}`,
+                            status: "connected",
+                            note,
+                            songTitle: track.title,
+                            songArtist: track.artist,
+                            songCover: track.coverUrl,
+                        }, cardText);
+                        // 触发角色自然回复：对这首歌表达自己的听歌感受与评价
+                        const promptDirective = `[系统事件：用户${userN}向你发起了网易云【一起听】邀请，歌曲是《${track.title}》（${track.artist || ""}），留言是："${note || "想和你一起听这首歌"}"。你已欣然接受并与TA戴上同一副耳机。请在接下来的回复中，自然地表达你接受一起听的心情，并结合歌曲名称、氛围感以及你的角色设定，说出你对这首歌的个人评价或联想，与用户温馨互动。]`;
+                        void runManagedGeneration({
+                            history: [
+                                ...loadChatMessages(session.id),
+                                {
+                                    id: `together-hint-${Date.now()}`,
+                                    sessionId: session.id,
+                                    role: "system",
+                                    content: promptDirective,
+                                    createdAt: new Date().toISOString(),
+                                }
+                            ]
+                        });
+                    }}
                 />
             )}
 

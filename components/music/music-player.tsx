@@ -17,6 +17,7 @@ import {
 import MusicCommentsPage from "./music-comments";
 import MusicArtistPage from "./music-artist";
 import { loadMusicBg, playerBgStyle, MUSIC_BG_EVENT, type MusicBgConfig } from "@/lib/music-bg";
+import { loadTogetherSession, TOGETHER_STATE_CHANGE_EVENT, type TogetherSession } from "@/lib/music-together";
 
 const PLAY_MODE_ICONS: Record<PlayMode, { svg: string; label: string }> = {
     sequence: {
@@ -71,6 +72,13 @@ export default function MusicPlayer() {
     const [palette, setPalette] = useState<CoverPalette>(DEFAULT_COVER_PALETTE);
     const [bgCfg, setBgCfg] = useState<MusicBgConfig>(() => loadMusicBg());
     const [commentTotal, setCommentTotal] = useState(0);
+    const [togetherSession, setTogetherSession] = useState<TogetherSession | null>(() => loadTogetherSession());
+
+    useEffect(() => {
+        const handleTogetherChange = () => setTogetherSession(loadTogetherSession());
+        window.addEventListener(TOGETHER_STATE_CHANGE_EVENT, handleTogetherChange);
+        return () => window.removeEventListener(TOGETHER_STATE_CHANGE_EVENT, handleTogetherChange);
+    }, []);
 
     useEffect(() => {
         const handleBgChange = () => setBgCfg(loadMusicBg());
@@ -476,6 +484,35 @@ export default function MusicPlayer() {
                             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                         </svg>
                     </button>
+                </div>
+            </div>
+
+            {/* Link FM 双人头像连线展示区（图二完全还原） */}
+            <div className="mp-link-fm-bar">
+                <div className="mp-link-fm-status">
+                    {togetherSession?.active ? "一起听连接中" : "一起听待机中"}
+                </div>
+                <div className="mp-link-fm-avatars">
+                    <div className="mp-link-fm-avatar-box" title={togetherSession?.userName || "你"}>
+                        {togetherSession?.userAvatar ? (
+                            <img src={togetherSession.userAvatar} alt="Me" />
+                        ) : (
+                            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=user" alt="Me" />
+                        )}
+                    </div>
+                    <div className={`mp-link-fm-avatar-box ${togetherSession?.active ? "" : "mp-link-fm-avatar-inactive"}`} title={togetherSession?.characterName || "角色待加入"}>
+                        {togetherSession?.active && togetherSession?.characterAvatar ? (
+                            <img src={togetherSession.characterAvatar} alt={togetherSession.characterName} />
+                        ) : (
+                            <span>Link</span>
+                        )}
+                    </div>
+                </div>
+                <div className="mp-link-fm-tip">
+                    {togetherSession?.active ? `正在与 ${togetherSession.characterName} 同步听歌` : "从聊天里邀请角色后，右侧头像会亮起"}
+                </div>
+                <div className="mp-link-fm-pill">
+                    <span>♥</span> 歌词同步中
                 </div>
             </div>
 
