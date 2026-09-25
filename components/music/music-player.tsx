@@ -18,7 +18,7 @@ import {
 import MusicCommentsPage from "./music-comments";
 import MusicArtistPage from "./music-artist";
 import { loadMusicBg, playerBgStyle, MUSIC_BG_EVENT, type MusicBgConfig } from "@/lib/music-bg";
-import { loadTogetherSession, TOGETHER_STATE_CHANGE_EVENT, type TogetherSession } from "@/lib/music-together";
+import { loadTogetherSession, stopTogetherSession, TOGETHER_STATE_CHANGE_EVENT, type TogetherSession } from "@/lib/music-together";
 
 const PLAY_MODE_ICONS: Record<PlayMode, { svg: string; label: string }> = {
     sequence: {
@@ -515,6 +515,19 @@ export default function MusicPlayer() {
                 <div className="mp-link-fm-pill">
                     <span>♥</span> 歌词同步中
                 </div>
+                {togetherSession?.active && (
+                    <button
+                        type="button"
+                        className="mp-link-fm-quit-btn"
+                        onClick={() => {
+                            const charName = togetherSession.characterName;
+                            stopTogetherSession();
+                            showMusicToast(`已结束与 ${charName} 的一起听`, 2200);
+                        }}
+                    >
+                        结束一起听
+                    </button>
+                )}
             </div>
 
             {/* Body — cover / vinyl / glow lyrics */}
