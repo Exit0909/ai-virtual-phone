@@ -15,7 +15,7 @@ function corsHeaders(): Record<string, string> {
 const DEFAULT_UPSTREAM = "https://api-enhanced-delta-sable.vercel.app";
 
 function getUpstreamBase(): string {
-    const raw = process.env.NETEASE_API_UPSTREAM || process.env.NEXT_PUBLIC_DEFAULT_NETEASE_API_BASE || DEFAULT_UPSTREAM;
+    const raw = process.env.NETEASE_API_UPSTREAM || DEFAULT_UPSTREAM;
     return raw.trim().replace(/\/+$/, "");
 }
 
