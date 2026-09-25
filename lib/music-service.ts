@@ -76,7 +76,7 @@ export function clearNeteaseCookie(): void {
 function withNeteaseParams(url: string): string {
     const cookie = loadNeteaseCookie();
     try {
-        const parsed = new URL(url);
+        const parsed = new URL(url, typeof window !== "undefined" ? window.location.origin : "http://localhost");
         if (!parsed.searchParams.has("realIP")) parsed.searchParams.set("realIP", NETEASE_REAL_IP);
         if (cookie && !parsed.searchParams.has("cookie")) parsed.searchParams.set("cookie", cookie);
         return parsed.toString();

@@ -4,6 +4,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "@/styles/together.css";
 import { useMusicPlayer, type PlayMode } from "@/lib/music-context";
 import { scrollElementWithinContainer } from "@/lib/dom-scroll";
 import { kvGet, kvSet } from "@/lib/kv-db";
